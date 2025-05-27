@@ -1,0 +1,188 @@
+Budget vs. Actual Variance Analysis Dashboard Guide for Finance Team
+This guide explains how to modify the Python code for a Budget vs. Actual Variance Analysis dashboard, focusing on the variables and how changing them affects the output. This will help you customize the dashboard for your specific needs.
+
+1. Understanding the Variables
+
+Here's a breakdown of the key variables used in the code and how they influence the dashboard's output:
+
+1.1. File Paths
+
+budget_file:
+
+Definition: A string variable that stores the name (or path) of the CSV file containing your budget data.
+
+Default Value: 'budget_data.csv'
+
+How it Affects Output: This variable tells the load_data function where to find the budget data. If you change this to a different filename, the dashboard will use that file.
+
+What to Change:
+
+To use a different CSV file for your budget data, change the string value.
+
+Example: budget_file = 'budget_2024.csv'
+
+actual_file:
+
+Definition: A string variable that stores the name (or path) of the CSV file containing your actual performance data.
+
+Default Value: 'actual_data.csv'
+
+How it Affects Output: This variable tells the load_data function where to find the actual data. Changing it will make the dashboard use a different file.
+
+What to Change:
+
+To use a different CSV file for your actual data, change the string value.
+
+Example: actual_file = 'actuals_q1_2024.csv'
+
+1.2. Significance Threshold
+
+percentage_threshold:
+
+Definition: A floating-point variable that defines the percentage threshold for flagging variances as significant.
+
+Default Value: 5.5
+
+How it Affects Output: This variable is used in the flag_significant_variances function. Any line item where the absolute percentage variance exceeds this value will be flagged as a "Significant Variance" in the dashboard.
+
+What to Change:
+
+To change the threshold for flagging variances, change the numerical value.
+
+Example:
+
+percentage_threshold = 10.0 (to flag variances greater than or equal to 10%)
+
+percentage_threshold = 2.0  (to flag variances greater than or equal to 2%)
+
+1.3. Function Parameters
+
+These variables are parameters passed to the functions, controlling their behavior:
+
+key_column (in align_data):
+
+Definition: A string variable that specifies the column name used to merge the budget and actual data.
+
+Default Value: 'Line Item'
+
+How it Affects Output: The align_data function uses this column to match rows between the budget and actual dataframes.  If your budget and actual data have a different common column name, the merge will not work correctly, and your variance calculations will be wrong.
+
+What to Change:
+
+If your budget and actual data use a different column name for the key identifier (e.g., "AccountName", "ProductCode"), change this string.
+
+Example: key_column = 'AccountName'
+
+budget_df_in, actual_df_in (in align_data):
+
+Definition: These are the input Pandas DataFrames containing the budget and actual data, respectively.
+
+How it Affects Output: These DataFrames provide the data that the align_data function merges.  They are not meant to be changed directly, but they are the result of the load_data function.
+
+merged_df_in (in calculate_variances):
+
+Definition: This is the input Pandas DataFrame containing the merged budget and actual data.
+
+How it Affects Output: This DataFrame is what the calculate_variances function uses to calculate the variance columns. It's the output of the align_data function.
+
+variance_df_in (in flag_significant_variances):
+
+Definition: This is the input Pandas DataFrame containing the variance data (including 'Variance (%)').
+
+How it Affects Output: This DataFrame is what the flag_significant_variances function uses to determine which variances are significant and add the 'Significant Variance' and 'Variance Note' columns. It's the output of the  calculate_variances function.
+
+file_path (in load_data):
+
+Definition: This is the path to the CSV file that the function loads into a Pandas DataFrame.
+
+How it Affects Output:  This tells the function which file to load.
+
+1.4. DataFrame Column Names (Within Functions)
+
+These are the names of the columns that the functions expect to find in your data:
+
+'Budget':
+
+Used In: calculate_variances, flag_significant_variances
+
+Definition: The column in your data that contains the budget amounts.
+
+How it Affects Output: The calculate_variances function uses this column to calculate variances. If your budget data has a different column name, you'll get errors or incorrect calculations.
+
+What to Change: If your budget data column is named differently (e.g., "BudgetAmount", "Budgeted"), you must change the code within the calculate_variances and  flag_significant_variances functions to match.
+
+'Actual':
+
+Used In: calculate_variances
+
+Definition: The column in your data that contains the actual performance amounts.
+
+How it Affects Output: The calculate_variances function uses this column to calculate variances. If your actual data has a different column name, the calculations will be incorrect.
+
+What to Change: If your actual data column is named differently (e.g., "ActualAmount", "Actuals"), change the code in the calculate_variances function.
+
+'Line Item':
+
+Used In: align_data
+
+Definition:  The column that is used to join the budget and actual data.
+
+How it Affects Output:  If the budget and actual data do not have a column with this name, the data will not be joined correctly.
+
+What to Change: Change the key_column parameter in the align_data function.
+
+'Variance (Absolute)', 'Variance (%)':
+
+Used In: flag_significant_variances
+
+Definition: These are the names of the columns created by the calculate_variances function.  They represent the absolute and percentage differences between budget and actual.
+
+How it Affects Output:  The flag_significant_variances function uses these columns to determine significant variances.
+
+'Significant Variance', 'Variance Note':
+
+Used In: DataTable display in app.layout
+
+Definition: These are the names of the columns created by the  flag_significant_variances function.  Significant Variance is a boolean flag, and Variance Note is a text explanation.
+
+How it Affects Output:  The DataTable in the Dash app displays these columns.  The  style_data_conditional  property uses the  'Significant Variance'  column to highlight rows.
+
+2. Modifying for Different Outputs
+
+Here's how you can change the code to produce different outputs:
+
+Change the Data Displayed:
+
+The dash_table.DataTable in the app.layout section controls which data is shown in the dashboard.
+
+Modification: To display different columns, change the columns parameter. To display different data, change the data parameter.
+
+app.layout = html.Div(
+    children=[
+        # ...
+        dash_table.DataTable(
+            id='variance-table',
+            columns=[{"name": i, "id": i} for i in ['Line Item', 'Budget', 'Actual', 'Variance (%)']],  # Show only these columns
+            data=variance_flagged_df.to_dict('records'),
+            # ...
+        ),
+    ]
+)
+
+Add More Data Processing:
+
+To add more calculations or data manipulation, modify the calculate_variances function or add new functions.  For example, calculate a rolling average.
+
+Change the Dashboard Layout:
+
+The app.layout section defines the structure of the dashboard.  You can add more HTML components (e.g., headings, paragraphs, divs) and Dash Core Components (e.g., graphs, dropdowns) to create a more complex layout.
+
+Add Charts and Graphs:
+
+Use the plotly library to create charts and graphs and add them to the app.layout.  This will make your dashboard more visual and interactive.
+
+Change Styling:
+
+Use the style_cell, style_header, and style_data_conditional properties of the dash_table.DataTable component, and standard CSS, to change the appearance of the table.
+
+By understanding these variables and how they are used, you can effectively modify the code to customize the Budget vs. Actual Variance Analysis dashboard to meet your specific reporting and analysis needs.
